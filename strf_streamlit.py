@@ -8,30 +8,37 @@ import random
 st.set_page_config(layout="wide")
 st.title("STRF Scheduling (without quantum time)")
 
-# User inputs
-num_jobs = st.number_input("Number of Jobs", 1, 10, 3)
-num_cpus = st.number_input("Number of CPUs", 1, 4, 2)
-chunk_unit = st.number_input("Chunk Unit (e.g., 0.5, 1.0):", value=1.0)
+# --- Compact layout for general inputs ---
+col1, col2, col3 = st.columns(3)
+with col1:
+    num_jobs = st.number_input("Number of Jobs", 1, 10, 3)
+with col2:
+    num_cpus = st.number_input("Number of CPUs", 1, 4, 2)
+with col3:
+    chunk_unit = st.number_input("Chunk Unit (e.g., 0.5, 1.0):", value=1.0)
 
-# Randomize job times
+# Randomize button
 if st.button("Randomize Job Times"):
     st.session_state.special_jobs = [
         {"arrival": round(random.uniform(0, 5) * 2) / 2, "burst": round(random.uniform(1, 10) * 2) / 2}
         for _ in range(num_jobs)
     ]
 
-# Input job times
+# --- Input job times (compact layout per job) ---
 processes = []
 for i in range(num_jobs):
     st.subheader(f"Job J{i+1}")
     default_arrival = st.session_state.get("special_jobs", [{}]*num_jobs)[i].get("arrival", 0.0)
     default_burst = st.session_state.get("special_jobs", [{}]*num_jobs)[i].get("burst", 3.0)
 
-    arrival = st.number_input(f"Arrival Time for J{i+1}", value=default_arrival, key=f"a_{i}")
-    burst = st.number_input(f"Burst Time for J{i+1}", value=default_burst, key=f"b_{i}")
+    c1, c2 = st.columns(2)
+    with c1:
+        arrival = st.number_input(f"Arrival Time for J{i+1}", value=default_arrival, key=f"a_{i}")
+    with c2:
+        burst = st.number_input(f"Burst Time for J{i+1}", value=default_burst, key=f"b_{i}")
     processes.append({'id': f'J{i+1}', 'arrival_time': arrival, 'burst_time': burst})
 
-# Run simulation
+# --- Run Simulation ---
 if st.button("Run Special STRF"):
     arrival_time = {p['id']: p['arrival_time'] for p in processes}
     burst_time = {p['id']: p['burst_time'] for p in processes}
@@ -76,7 +83,6 @@ if st.button("Run Special STRF"):
 
         if available_cpus and available_jobs:
             capture_queue(current_time, available_jobs)
-
             available_jobs.sort(key=lambda j: (remaining_time[j], arrival_time[j]))
 
             for cpu in available_cpus:
@@ -103,7 +109,7 @@ if st.button("Run Special STRF"):
         )
         current_time = min(future_times) if future_times else current_time + 0.1
 
-    # Results
+    # --- Output Table ---
     for p in processes:
         p['start_time'] = start_time[p['id']]
         p['end_time'] = end_time[p['id']]
@@ -124,7 +130,7 @@ if st.button("Run Special STRF"):
     st.dataframe(df, use_container_width=True)
     st.write(f"**Average Turnaround Time:** `{avg_turnaround:.2f}`")
 
-    # Gantt chart
+    # --- Gantt Chart ---
     def plot_gantt():
         fig, ax = plt.subplots(figsize=(18, 8))
         cmap = plt.colormaps['tab20']
