@@ -6,7 +6,7 @@ import pandas as pd
 import random
 
 st.set_page_config(layout="wide")
-st.title("Special STRF Scheduling Simulator")
+st.title("STRF Scheduling (without quantum time)")
 
 # User inputs
 num_jobs = st.number_input("Number of Jobs", 1, 10, 3)
